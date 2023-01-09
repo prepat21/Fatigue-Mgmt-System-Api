@@ -26,10 +26,9 @@ app.use(
 
 
 app.use(
-  "/graphql",
-  graphqlHTTP({
-    schema,
-    graphiql: process.env.NODE_ENV === "production",
+  helmet({
+    contentSecurityPolicy:
+      process.env.NODE_ENV === "production" ? undefined : false,
   })
 );
 
