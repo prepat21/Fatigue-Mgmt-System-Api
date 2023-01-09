@@ -4,6 +4,7 @@ const { graphqlHTTP } = require("express-graphql");
 const colors = require("colors");
 const cors = require("cors");
 const schema = require("./schema/schema.js");
+const helmet = require('fusion-plugin-react-helmet-async');
 const connectDB = require("./config/db");
 
 const port = process.env.PORT || 5000;
