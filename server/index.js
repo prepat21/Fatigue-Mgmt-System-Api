@@ -15,6 +15,8 @@ connectDB();
 
 app.use(cors());
 
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }))
+
 app.use(
   "/graphql",
   graphqlHTTP({
