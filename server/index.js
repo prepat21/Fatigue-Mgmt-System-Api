@@ -27,7 +27,7 @@ app.use(
 
 app.use(
   helmet.contentSecurityPolicy({
-    direcive:{defaultSrc["'self'"],}}
+    direcive:{defaultSrc:["'self'"],}}
   )
 );
 
