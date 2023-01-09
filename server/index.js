@@ -26,9 +26,7 @@ app.use(
 
 
 app.use(
-  helmet({
-    contentSecurityPolicy: true,
-  })
+  helmet()
 );
 
 app.listen(port, ()=>{console.log(`Server running on port ${port}`)});
