@@ -26,7 +26,9 @@ app.use(
 
 
 app.use(
-  helmet()
+  helmet.contentSecurityPolicy({
+    direcive:{defaultSrc["'self'"],}}
+  )
 );
 
 app.listen(port, ()=>{console.log(`Server running on port ${port}`)});
