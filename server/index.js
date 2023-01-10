@@ -27,7 +27,7 @@ app.use(
 );
 
 app.get("/:universalURL", (req, res) => {
-    res.send("404 URL NOT FOUND");
+    res.send("404 URL WAS NOT FOUND");
 });
 
 app.listen(port, () => {
