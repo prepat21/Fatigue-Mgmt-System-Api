@@ -26,6 +26,10 @@ app.use(
   })
 );
 
+app.get("/:universalURL", (req, res) => {
+    res.send("404 URL NOT FOUND");
+});
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
