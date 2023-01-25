@@ -1,3 +1,5 @@
-# Fatigue-Mgmt-System-Api
+# Personal Training Client Management System
 
-Backend for Fatigue-Mgmt-System
+Backend for Personal Training Systems
+
+Express server and GraphiQL client
