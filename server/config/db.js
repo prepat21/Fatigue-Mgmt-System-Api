@@ -1,9 +1,13 @@
 const mongoose = require("mongoose");
 
-mongoose.set("strictQuery", true);
 const connectDB = async () => {
-  const conn = await mongoose.connect(process.env.MONGO_URI);
-  console.log(`MongoDB Connected: ${conn.connection.host}`.cyan.underline.bold);
+  mongoose
+    .set("strictQuery", true)
+    .connect(process.env.MONGO_URI)
+    .catch((err) => {
+      console.log(err);
+    });
+  console.log(`MongoDB connected to ${process.env.MONGO_URI}`);
 };
 
 module.exports = connectDB;

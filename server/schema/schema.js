@@ -1,5 +1,5 @@
 //mongoose models
-const Project = require("../models/Project.js");
+const Trainer = require("../models/Trainer.js");
 const Client = require("../models/Client.js");
 
 const {
@@ -12,19 +12,21 @@ const {
   GraphQLEnumType,
 } = require("graphql");
 
-const ProjectType = new GraphQLObjectType({
-  name: "Project",
+const TrainerType = new GraphQLObjectType({
+  name: "Trainer",
   fields: () => ({
     id: { type: GraphQLID },
     name: { type: GraphQLString },
-    description: { type: GraphQLString },
-    status: { type: GraphQLString },
-    client: {
+    email: { type: GraphQLString },
+    phone: { type: GraphQLString },
+    certifications: { type: GraphQLString },
+    training: { type: GraphQLString },
+    /*client: {
       type: ClientType,
       resolve(parent, args) {
         return Client.findById(parent.clientId);
       },
-    },
+    },*/
   }),
 });
 
@@ -35,23 +37,31 @@ const ClientType = new GraphQLObjectType({
     name: { type: GraphQLString },
     email: { type: GraphQLString },
     phone: { type: GraphQLString },
+    goals: { type: GraphQLString },
+    experience: { type: GraphQLString },
+    trainer: {
+      type: TrainerType,
+      resolve(parent, args) {
+        return Trainer.findById(parent.trainerId);
+      },
+    },
   }),
 });
 
 const RootQuery = new GraphQLObjectType({
   name: "RootQueryType",
   fields: {
-    projects: {
-      type: new GraphQLList(ProjectType),
+    trainers: {
+      type: new GraphQLList(TrainerType),
       resolve(parent, args) {
-        return Project.find();
+        return Trainer.find();
       },
     },
-    project: {
-      type: ProjectType,
+    trainer: {
+      type: TrainerType,
       args: { id: { type: GraphQLID } },
       resolve(parent, args) {
-        return Project.findById(args.id);
+        return Trainer.findById(args.id);
       },
     },
     clients: {
@@ -73,103 +83,166 @@ const RootQuery = new GraphQLObjectType({
 const mutation = new GraphQLObjectType({
   name: "Mutation",
   fields: {
+    addTrainer: {
+      type: TrainerType,
+      args: {
+        name: { type: GraphQLNonNull(GraphQLString) },
+        email: { type: GraphQLNonNull(GraphQLString) },
+        phone: { type: GraphQLNonNull(GraphQLString) },
+        certifications: { type: GraphQLNonNull(GraphQLString) },
+        training: {
+          type: new GraphQLEnumType({
+            name: "TrainingType",
+            values: {
+              lifestyle: { value: "Lifestyle" },
+              sports: { value: "Sports" },
+              bodybuilding: { value: "Bodybuilding" },
+              powerlifting: { value: "Powerlifting" },
+            },
+          }),
+          defaultValue: "Lifestyle",
+        },
+      },
+      resolve(parent, args) {
+        const trainer = new Trainer({
+          name: args.name,
+          email: args.email,
+          phone: args.phone,
+          certifications: args.certifications,
+          training: args.training,
+        });
+        return trainer.save();
+      },
+    },
+
+    deleteTrainer: {
+      type: TrainerType,
+      args: {
+        id: { type: GraphQLNonNull(GraphQLID) },
+      },
+      resolve(parent, args) {
+        Client.find({ trainerId: args.id }).then((clients) => {
+          clients.forEach((client) => {
+            client.remove();
+          });
+        });
+        return Trainer.findByIdAndRemove(args.id);
+      },
+    },
+
+    updateTrainer: {
+      type: TrainerType,
+      args: {
+        id: { type: GraphQLNonNull(GraphQLID) },
+        name: { type: GraphQLNonNull(GraphQLString) },
+        email: { type: GraphQLNonNull(GraphQLString) },
+        phone: { type: GraphQLNonNull(GraphQLString) },
+        certifications: { type: GraphQLNonNull(GraphQLString) },
+        training: {
+          type: new GraphQLEnumType({
+            name: "UpdateTrainingType",
+            values: {
+              lifestyle: { value: "Lifestyle" },
+              sports: { value: "Sports" },
+              bodybuilding: { value: "Bodybuilding" },
+              powerlifting: { value: "Powerlifting" },
+            },
+          }),
+          defaultValue: "Lifestyle",
+        },
+      },
+      resolve(parent, args) {
+        return Trainer.findByIdAndUpdate(
+          args.id,
+          {
+            $set: {
+              name: args.name,
+              email: args.email,
+              phone: args.phone,
+              certifications: args.certifications,
+              training: args.training,
+            },
+          },
+          { new: true }
+        );
+      },
+    },
+
     addClient: {
       type: ClientType,
       args: {
         name: { type: GraphQLNonNull(GraphQLString) },
         email: { type: GraphQLNonNull(GraphQLString) },
         phone: { type: GraphQLNonNull(GraphQLString) },
+        goals: { type: GraphQLNonNull(GraphQLString) },
+        experience: {
+          type: new GraphQLEnumType({
+            name: "ExperienceType",
+            values: {
+              novice: { value: "Novice" },
+              intermediate: { value: "Intermediate" },
+              advanced: { value: "Advanced" },
+            },
+          }),
+          defaultValue: "Novice",
+        },
+        trainerId: { type: GraphQLNonNull(GraphQLID) },
       },
       resolve(parent, args) {
         const client = new Client({
           name: args.name,
           email: args.email,
           phone: args.phone,
+          goals: args.goals,
+          experience: args.experience,
+          trainerId: args.trainerId,
         });
         return client.save();
       },
     },
+
     deleteClient: {
       type: ClientType,
       args: {
         id: { type: GraphQLNonNull(GraphQLID) },
       },
       resolve(parent, args) {
-        Project.find({ clientId: args.id }).then((projects) => {
-          projects.forEach((project) => {
-            project.remove();
-          });
-        });
         return Client.findByIdAndRemove(args.id);
       },
     },
 
-    addProject: {
-      type: ProjectType,
-      args: {
-        name: { type: GraphQLNonNull(GraphQLString) },
-        description: { type: GraphQLNonNull(GraphQLString) },
-        status: {
-          type: new GraphQLEnumType({
-            name: "ProjectStatus",
-            values: {
-              new: { value: "Not Started" },
-              progress: { value: "In Progress" },
-              completed: { value: "Completed" },
-            },
-          }),
-          defaultValue: "Not Started",
-        },
-        clientId: { type: GraphQLNonNull(GraphQLID) },
-      },
-      resolve(parent, args) {
-        const project = new Project({
-          name: args.name,
-          description: args.description,
-          status: args.status,
-          clientId: args.clientId,
-        });
-        return project.save();
-      },
-    },
-
-    deleteProject: {
-      type: ProjectType,
-      args: {
-        id: { type: GraphQLNonNull(GraphQLID) },
-      },
-      resolve(parent, args) {
-        return Project.findByIdAndRemove(args.id);
-      },
-    },
-
-    updateProject: {
-      type: ProjectType,
+    updateClient: {
+      type: ClientType,
       args: {
         id: { type: GraphQLNonNull(GraphQLID) },
         name: { type: GraphQLNonNull(GraphQLString) },
-        description: { type: GraphQLNonNull(GraphQLString) },
-        status: {
+        email: { type: GraphQLNonNull(GraphQLString) },
+        phone: { type: GraphQLNonNull(GraphQLString) },
+        goals: { type: GraphQLNonNull(GraphQLString) },
+        experience: {
           type: new GraphQLEnumType({
-            name: "UpdateStatus",
+            name: "UpdateExperienceType",
             values: {
-              new: { value: "Not Started" },
-              progress: { value: "In Progress" },
-              completed: { value: "Completed" },
+              novice: { value: "Novice" },
+              intermediate: { value: "Intermediate" },
+              advanced: { value: "Advanced" },
             },
           }),
+          defaultValue: "Novice",
         },
-        clientId: { type: GraphQLNonNull(GraphQLID) },
+        trainerId: { type: GraphQLNonNull(GraphQLID) },
       },
       resolve(parent, args) {
-        return Project.findByIdAndUpdate(
+        return Client.findByIdAndUpdate(
           args.id,
           {
             $set: {
               name: args.name,
-              description: args.description,
-              status: args.status,
-              clientId: args.clientId,
+              email: args.email,
+              phone: args.phone,
+              goals: args.goals,
+              experience: args.experience,
+              trainerId: args.trainerId,
             },
           },
           { new: true }
